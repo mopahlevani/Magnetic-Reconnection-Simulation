@@ -1,0 +1,52 @@
+# Some Functions that mightly would help with the final simulation are defined here:
+
+
+# Find the 8 closest neighbors of each node:
+
+def find_neighbors(x, y):
+    # Moore Neighborhood
+    neighbors = [(-1, -1), (-1, 0), (-1, 1),
+                 (0, -1),            (0, 1),
+                 (1, -1),   (1, 0),  (1, 1)]
+    neighbor_coords = np.array([(x + dx, y + dy) for dx, dy in neighbors])
+    return neighbor_coords
+
+
+
+# Magnetic Field Line Direction Calculation
+
+def magnetic_field_direction(x, y):
+    r = np.sqrt(x**2 + y**2) + 1e-9
+    theta = np.arctan2(y, x)
+    B_r = 2 * np.cos(theta) / r**3 
+    B_theta = np.sin(theta) / r**3
+    B_x = B_r * np.cos(theta) - B_theta * np.sin(theta)
+    B_y = B_r * np.sin(theta) + B_theta * np.cos(theta)
+    return np.array([Bx, By])
+
+
+# Find the Aligned Neighbor
+
+def find_best_aligned_neighbor(magnetic_direction, neighbors, x, y):
+    max_dot_product = float(-1)
+    best_neighbor = None
+    for neighbor in neighbors:
+        dx, dy = float(neighbor[0] - x), float(neighbor[1] - y)       
+        displacement = np.array([dx, dy], dtype=float)
+        norm = np.linalg.norm(displacement)
+        if norm == 0:
+            continue
+        displacement /= norm        
+        dot_product = np.dot(magnetic_direction, displacement)
+        # Check if this dot product is the closest to 1
+        if dot_product > max_dot_product:
+            max_dot_product = dot_product
+            best_neighbor = neighbor
+    return best_neighbor
+
+
+
+# Make Connection (Edge)
+
+def connect_to_best_neighbor(graph, current_node, best_neighbor):
+    graph.add_edge(current_node, best_neighbor)
